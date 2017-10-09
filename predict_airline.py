@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 from sklearn import linear_model, svm
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -10,7 +10,7 @@ import pandas as pd, numpy as np
 from sklearn.feature_selection import chi2
 
 
-# In[2]:
+# In[ ]:
 
 # define models
 ridgecv = linear_model.RidgeCV(alphas=[0.1,1,10])
@@ -42,29 +42,29 @@ def read_files():
     
 
 
-# In[5]:
+# In[57]:
 
 read_files()
 
 
-# In[6]:
+# In[58]:
 
 # just take first 1 million rows from 2007 sheet
-data = data2.ix[:1000000].copy()
+data = data2.ix[:10000000].copy()
 
 
-# In[7]:
+# In[59]:
 
 #sys.getsizeof(data) / 1000000
-#del data2
+del data2
 
 
-# In[8]:
+# In[60]:
 
 Y_all = data.ix[:,'ArrDelay'].copy()
 
 
-# In[9]:
+# In[61]:
 
 # Select below few columns
 
@@ -86,13 +86,13 @@ out = create_dummies()
 out.info()
 
 
-# In[10]:
+# In[ ]:
 
 # create df named out2 for elapsed time & distance, which are already in numeric format
 out2 = data.ix[:,['CRSElapsedTime','Distance']]
 
 
-# In[11]:
+# In[ ]:
 
 # Subset expected departure time into six 4-hour buckets
 deptime = data.ix[:,'CRSDepTime']
@@ -120,13 +120,13 @@ out3 = pd.get_dummies(pd.Series(per_series))
     
 
 
-# In[12]:
+# In[ ]:
 
 #uniq_tail = data.ix[:,'TailNum'].drop_duplicates().dropna()
 #uniq_tail
 
 
-# In[13]:
+# In[ ]:
 
 # This will identify unique tail numbers from 2007/2008 data; get year from plane-data, and build a list of years 
 # for corresponding tail numbers
@@ -169,7 +169,7 @@ for ind, tail in uniq_tail.iteritems():
     year_list.append(decade)
 
 
-# In[14]:
+# In[ ]:
 
 # Combine tail number with corresponding year into a dataframe
 year_series = pd.Series(year_list)
@@ -180,20 +180,20 @@ tail_year = pd.concat([uniq_tail,year_series],axis=1)
 #print year_series
 
 
-# In[15]:
+# In[ ]:
 
 #x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=0.1, stratify=Y)
 
 
-# In[36]:
+# In[ ]:
 
 # Memory error... reduce the count of rows
 # Y is target
-limit = 100000
+limit = 800000
 Y = Y_all[:limit+1].copy()
 
 
-# In[37]:
+# In[ ]:
 
 # Find whether there are any NaNs in target variable - Arrival delay
 # There were few such rows...
@@ -203,32 +203,32 @@ print 'Are values finite for Y? ', np.any(np.isfinite(np.array(Y)))
 print 'count of nulls in 3 diff approaches ', Y.isnull().sum().sum() , np.sum(np.isnan(Y_np)),         pd.isnull(Y_np).sum()
 
 
-# In[38]:
+# In[ ]:
 
 # Find index of rows that contain NaN in target variable
 null_inds = np.where(np.isnan(Y_np))[0]
 
 
-# In[39]:
+# In[ ]:
 
 print null_inds, len(null_inds)
 
 
-# In[40]:
+# In[ ]:
 
 # Remove rows Y where NaN was present in target variable
 Y.drop(Y.index[null_inds], inplace=True)
 Y_np = np.array(Y)
 
 
-# In[41]:
+# In[ ]:
 
 Y_np.shape
 
 
 # # This is where actual modeling happens
 
-# In[42]:
+# In[ ]:
 
 # Modeling
 
@@ -245,21 +245,21 @@ print temp_X.shape
 #len(temp_X[temp_X[:] == 0.0])
 
 
-# In[43]:
+# In[62]:
 
 # print all column names
 #temp_X.columns.values
 #temp_X['CRSElapsedTime'].isnull().any()
 
 
-# In[63]:
+# In[65]:
 
 clf = ridge
 #clf = lasso
 #clf = svr
 
 
-# In[ ]:
+# In[66]:
 
 st = time.time()
 temp_X_np = np.array(temp_X)
@@ -268,19 +268,19 @@ print 'duration: ', time.time() - st
 print 'Score; average score ' , score, np.average(score)
 
 
-# In[51]:
+# In[67]:
 
 pred = lasso.fit(temp_X_np, Y_np)
 
 
-# In[52]:
+# In[68]:
 
 # Find linear regression coefficient. Second value is for weather delay
 print pred.intercept_
 pred.coef_[1]
 
 
-# In[53]:
+# In[69]:
 
 # Find pvalue for weather delay
 scores, pvalues = chi2(temp_X_np, Y_np)
@@ -296,34 +296,38 @@ pvalues[:1]
 
 # # Find Pearson Correlation between weather & arrival delay
 
-# In[54]:
+# In[70]:
 
 from scipy.stats import pearsonr
 
 
-# In[55]:
+# In[71]:
 
 weather_vect = data.ix[:,'WeatherDelay'].copy()
 arr_vect = data.ix[:,'ArrDelay'].copy()
 
 
-# In[56]:
+# In[72]:
 
 weather_vect.shape, arr_vect.shape
 
 
-# In[60]:
+# In[78]:
 
 print 'nulls in weather & arrival delay vectors? ' , weather_vect.isnull().any(), arr_vect.isnull().any()
 null_inds = np.where(arr_vect.isnull())
-print len(null_inds[0])
+null2_inds = np.where(weather_vect.isnull())
+print len(null_inds[0]), len(null2_inds[0])
 
 # drop rows that have null in arrival delay vector 
 weather_vect.drop(weather_vect.index[null_inds], inplace=True)
 arr_vect.drop(arr_vect.index[null_inds], inplace=True)
+weather_vect.drop(weather_vect.index[null2_inds], inplace=True)
+arr_vect.drop(arr_vect.index[null2_inds], inplace=True)
+print 'nulls in weather & arrival delay vectors? ' , weather_vect.isnull().any(), arr_vect.isnull().any()
 
 
-# In[61]:
+# In[79]:
 
 pearsonr(weather_vect, arr_vect)
 
